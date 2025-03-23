@@ -126,6 +126,37 @@ namespace BurnAnalysisApp.Migrations
                     b.ToTable("Doctors");
                 });
 
+            modelBuilder.Entity("BurnAnalysisApp.Models.Notification", b =>
+                {
+                    b.Property<int>("NotificationID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("NotificationID"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DoctorID")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ForumPostID")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("NotificationID");
+
+                    b.HasIndex("ForumPostID");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("BurnAnalysisApp.Models.PatientInfo", b =>
                 {
                     b.Property<int>("PatientID")
@@ -137,6 +168,12 @@ namespace BurnAnalysisApp.Migrations
                     b.Property<int>("Age")
                         .HasColumnType("integer");
 
+                    b.Property<string>("AudioPath")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BurnArea")
+                        .HasColumnType("text");
+
                     b.Property<string>("BurnCause")
                         .HasColumnType("text");
 
@@ -145,6 +182,9 @@ namespace BurnAnalysisApp.Migrations
 
                     b.Property<DateTime?>("BurnOccurrenceDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
 
                     b.Property<string>("Gender")
                         .IsRequired()
@@ -163,7 +203,13 @@ namespace BurnAnalysisApp.Migrations
                     b.Property<string>("PhotoPath")
                         .HasColumnType("text");
 
+                    b.Property<bool>("ReminderSent")
+                        .HasColumnType("boolean");
+
                     b.HasKey("PatientID");
+
+                    b.HasIndex("PatientID")
+                        .IsUnique();
 
                     b.ToTable("Patients");
                 });
@@ -199,6 +245,35 @@ namespace BurnAnalysisApp.Migrations
                     b.HasIndex("PatientID");
 
                     b.ToTable("Visits");
+                });
+
+            modelBuilder.Entity("BurnAnalysisApp.Models.VoiceRecording", b =>
+                {
+                    b.Property<int>("VoiceRecordingID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("VoiceRecordingID"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DoctorName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ForumPostID")
+                        .HasColumnType("integer");
+
+                    b.HasKey("VoiceRecordingID");
+
+                    b.HasIndex("ForumPostID");
+
+                    b.ToTable("VoiceRecordings");
                 });
 
             modelBuilder.Entity("Comment", b =>
@@ -252,15 +327,12 @@ namespace BurnAnalysisApp.Migrations
                     b.Property<int>("PatientID")
                         .HasColumnType("integer");
 
-                    b.Property<int>("PatientInfoPatientID")
-                        .HasColumnType("integer");
-
                     b.Property<string>("PhotoPath")
                         .HasColumnType("text");
 
                     b.HasKey("ForumPostID");
 
-                    b.HasIndex("PatientInfoPatientID");
+                    b.HasIndex("PatientID");
 
                     b.ToTable("ForumPosts");
                 });
@@ -293,15 +365,36 @@ namespace BurnAnalysisApp.Migrations
                     b.Navigation("Admin");
                 });
 
+            modelBuilder.Entity("BurnAnalysisApp.Models.Notification", b =>
+                {
+                    b.HasOne("ForumPost", "ForumPost")
+                        .WithMany("Notifications")
+                        .HasForeignKey("ForumPostID")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ForumPost");
+                });
+
             modelBuilder.Entity("BurnAnalysisApp.Models.Visit", b =>
                 {
                     b.HasOne("BurnAnalysisApp.Models.PatientInfo", "Patient")
-                        .WithMany("Visits")
+                        .WithMany()
                         .HasForeignKey("PatientID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("BurnAnalysisApp.Models.VoiceRecording", b =>
+                {
+                    b.HasOne("ForumPost", "ForumPost")
+                        .WithMany("VoiceRecordings")
+                        .HasForeignKey("ForumPostID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ForumPost");
                 });
 
             modelBuilder.Entity("Comment", b =>
@@ -315,23 +408,22 @@ namespace BurnAnalysisApp.Migrations
 
             modelBuilder.Entity("ForumPost", b =>
                 {
-                    b.HasOne("BurnAnalysisApp.Models.PatientInfo", "PatientInfo")
+                    b.HasOne("BurnAnalysisApp.Models.PatientInfo", "Patient")
                         .WithMany()
-                        .HasForeignKey("PatientInfoPatientID")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("PatientID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("PatientInfo");
-                });
-
-            modelBuilder.Entity("BurnAnalysisApp.Models.PatientInfo", b =>
-                {
-                    b.Navigation("Visits");
+                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("ForumPost", b =>
                 {
                     b.Navigation("Comments");
+
+                    b.Navigation("Notifications");
+
+                    b.Navigation("VoiceRecordings");
                 });
 #pragma warning restore 612, 618
         }

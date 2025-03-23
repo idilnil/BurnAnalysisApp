@@ -18,6 +18,7 @@ public class ForumPost
     public string Description { get; set; } // Hasta hakkında notlar
     public string? PhotoPath { get; set; } // Hasta fotoğrafı
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
+    public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     public List<Comment> Comments { get; set; } = new List<Comment>(); // Yorumlar
+    public List<VoiceRecording> VoiceRecordings { get; set; } = new List<VoiceRecording>(); // Ses Kayıtları
 }

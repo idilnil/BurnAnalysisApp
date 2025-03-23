@@ -5,30 +5,30 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BurnAnalysisApp.Models
 {
-    public class PatientInfo
-    {
-        [Key]
-        public int PatientID { get; set; }
+   public class PatientInfo
+{
+    [Key]
+    public int PatientID { get; set; }
 
-        [Required]
-        public string Name { get; set; } = string.Empty;
+    [Required]
+    public string Name { get; set; } = string.Empty;
+    public string? Email { get; set; }
 
-        [Range(0, 120)]
-        public int Age { get; set; }
+    [Range(0, 120)]
+    public int Age { get; set; }
 
-        [Required]
-        public string Gender { get; set; } = string.Empty;
+    [Required]
+    public string Gender { get; set; } = string.Empty;
 
-        public string? MedicalHistory { get; set; }
+    public string? MedicalHistory { get; set; }
+    public string? BurnCause { get; set; }
+    public string? BurnArea { get; set; }
 
-        // Yanık bilgileri
-        public string? BurnCause { get; set; }
-        public DateTime? HospitalArrivalDate { get; set; }
-        public DateTime? BurnOccurrenceDate { get; set; }
-        public string? PhotoPath { get; set; }
-        public string? BurnDepth { get; set; }
-
-        // Bir hastanın birden fazla ziyareti olabilir (One-to-Many ilişkisi)
-        public ICollection<Visit>? Visits { get; set; }
-    }
+    public DateTime? HospitalArrivalDate { get; set; }
+    public DateTime? BurnOccurrenceDate { get; set; }
+    public string? PhotoPath { get; set; }
+    public string? BurnDepth { get; set; }
+    public string? AudioPath { get; set; } // Ses dosyasının yolunu saklamak için
+    public bool ReminderSent { get; set; } = false; // Yeni alan
+}
 }

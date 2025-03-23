@@ -59,6 +59,8 @@ namespace BurnAnalysisApp.Controllers
                 var existingPatient = await _context.Patients
                     .FirstOrDefaultAsync(p => p.Name == burnForm.PatientName &&
                                                p.Age == burnForm.Age &&
+                                               p.Email== burnForm.Email&& 
+                                               p.BurnArea== burnForm.BurnArea&&
                                                p.Gender == burnForm.Gender);
 
                 if (existingPatient != null)
@@ -81,8 +83,10 @@ namespace BurnAnalysisApp.Controllers
                     {
                         Name = burnForm.PatientName,
                         Age = burnForm.Age,
+                        Email = burnForm.Email,
                         Gender = burnForm.Gender,
                         BurnCause = burnForm.BurnCause,
+                        BurnArea = burnForm.BurnArea,
                         HospitalArrivalDate = burnForm.HospitalArrivalDate,
                         BurnOccurrenceDate = burnForm.BurnOccurrenceDate,
                         PhotoPath = photoPath

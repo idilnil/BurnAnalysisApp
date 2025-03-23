@@ -43,30 +43,33 @@ namespace BurnAnalysisApp.Controllers
             return visit;
         }
 
-        // Yeni bir ziyaret oluştur
-        [HttpPost("patient/{patientId}")]
-        public async Task<ActionResult<Visit>> CreateVisit(int patientId, [FromBody] Visit visit)
-        {
-            if (visit == null)
-            {
-                return BadRequest(new { message = "Geçersiz ziyaret verisi" });
-            }
+        
+   // Yeni bir ziyaret oluştur
+[HttpPost("patient/{patientId}")]
+public async Task<ActionResult<Visit>> CreateVisit(int patientId, [FromBody] Visit visit)
+{
+    if (visit == null)
+    {
+        return BadRequest(new { message = "Veri null, geçersiz ziyaret." });
+    }
 
-            // Hasta kontrolü
-            var patient = await _context.Patients.FindAsync(patientId);
-            if (patient == null)
-            {
-                return NotFound(new { message = "Hasta bulunamadı" });
-            }
+    // Hasta ID'yi ziyaret nesnesine set et
+    visit.PatientID = patientId;  // Burada PatientID kullanıyoruz
 
-            // Hasta ID'yi set et
-            visit.PatientID = patientId;
+    try
+    {
+        _context.Visits.Add(visit);
+        await _context.SaveChangesAsync();
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(new { message = $"Bir hata oluştu: {ex.Message}" });
+    }
 
-            _context.Visits.Add(visit);
-            await _context.SaveChangesAsync();
+    return CreatedAtAction(nameof(GetVisitById), new { id = visit.VisitID }, visit);
+}
 
-            return CreatedAtAction(nameof(GetVisitById), new { id = visit.VisitID }, visit);
-        }
+
 
         // Mevcut bir ziyareti güncelle
         [HttpPut("{id}")]

@@ -14,7 +14,7 @@
             public int PatientID { get; set; }
 
             [ForeignKey("PatientID")]
-            public PatientInfo Patient { get; set; } 
+            public PatientInfo? Patient { get; set; } 
 
             // Ziyaret bilgileri
             [Required]

@@ -148,6 +148,10 @@ const App = () => {
         <Route path="/patient/:id" element={<PatientView />} />
         <Route path="/doctorForum" element={<DoctorForum />} />
 
+        {/* Doktor Forum Tekil Post */}
+        <Route path="/doctorForum/:postId" element={<DoctorForum />} />  {/*  BURAYA EKLEDİM */}
+
+        <Route path="/notifications" element={<Notifications />} />
 
         {/* Doktor Paneli */}
         <Route
@@ -188,9 +192,9 @@ const App = () => {
         />
 
         {/* Admin Paneli */}
-        <Route 
-          path="/admin" 
-          element={isAdminLoggedIn ? <Navigate to="/admin-dashboard" /> : <Navigate to="/login/admin" />} 
+        <Route
+          path="/admin"
+          element={isAdminLoggedIn ? <Navigate to="/admin-dashboard" /> : <Navigate to="/login/admin" />}
         />
         <Route
           path="/admin-dashboard"

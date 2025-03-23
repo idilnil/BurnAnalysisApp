@@ -5,9 +5,11 @@ import "./BurnForm.css";
 const BurnForm = () => {
   const [formData, setFormData] = useState({
     patientName: "",
+    email: "",
     age: "",
     gender: "",
     burnCause: "",
+    burnArea: "",
     hospitalArrivalDate: "",
     burnOccurrenceDate: "",
     burnOccurrenceTime: "",
@@ -24,6 +26,17 @@ const BurnForm = () => {
     "Sürtünmeye bağlı",
     "Donma sonucu oluşan",
     "Asit ve alkali madde teması",
+  ];
+
+  const burnAreas = [
+    "Baş",
+    "Boyun",
+    "Göğüs",
+    "Kalça",
+    "Genital",
+    "Ayak",
+    "El",
+    "Kol",
   ];
 
   const handleChange = (e) => {
@@ -54,9 +67,11 @@ const BurnForm = () => {
     try {
       const formPayload = new FormData();
       formPayload.append("PatientName", formData.patientName);
+      formPayload.append("Email", formData.email);
       formPayload.append("Age", formData.age);
       formPayload.append("Gender", formData.gender);
       formPayload.append("BurnCause", formData.burnCause);
+      formPayload.append("BurnArea", formData.burnArea);
       formPayload.append("HospitalArrivalDate", new Date(formData.hospitalArrivalDate).toISOString());
       formPayload.append("BurnOccurrenceDate", new Date(formData.burnOccurrenceDate).toISOString());
       formPayload.append("BurnOccurrenceTime", formData.burnOccurrenceTime);
@@ -73,9 +88,11 @@ const BurnForm = () => {
 
       setFormData({
         patientName: "",
+        email: "",
         age: "",
         gender: "",
         burnCause: "",
+        burnArea: "",
         hospitalArrivalDate: "",
         burnOccurrenceDate: "",
         burnOccurrenceTime: "",
@@ -100,6 +117,10 @@ const BurnForm = () => {
           <input type="text" name="patientName" value={formData.patientName} onChange={handleChange} required />
         </div>
         <div className="form-group">
+          <label>Hastanın E-posta Adresi:</label>
+          <input type="email" name="email" value={formData.email} onChange={handleChange} required />
+        </div>
+        <div className="form-group">
           <label>Yaşı:</label>
           <input type="number" name="age" value={formData.age} onChange={handleChange} required />
         </div>
@@ -116,9 +137,16 @@ const BurnForm = () => {
           <select name="burnCause" value={formData.burnCause} onChange={handleChange} required>
             <option value="">Seçiniz</option>
             {burnCauses.map((cause, index) => (
-              <option key={index} value={cause}>
-                {cause}
-              </option>
+              <option key={index} value={cause}>{cause}</option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Yanık Bölgesi:</label>
+          <select name="burnArea" value={formData.burnArea} onChange={handleChange} required>
+            <option value="">Seçiniz</option>
+            {burnAreas.map((area, index) => (
+              <option key={index} value={area}>{area}</option>
             ))}
           </select>
         </div>

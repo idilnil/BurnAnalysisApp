@@ -24,17 +24,17 @@ const AddVisit = () => {
     const file = e.target.files[0];
     if (!file) return;
     
-    const formData = new FormData();
-    formData.append("file", file);
+    const fileFormData = new FormData();
+    fileFormData.append("file", file);
     
     try {
       const response = await fetch("http://localhost:5005/api/visit/upload", {
         method: "POST",
-        body: formData,
+        body: fileFormData,
       });
     
       if (!response.ok) {
-        const errorData = await response.json(); // Hata mesajını al
+        const errorData = await response.json();
         throw new Error(errorData.message || "Dosya yükleme başarısız.");
       }
     
@@ -51,17 +51,18 @@ const AddVisit = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      
       const requestBody = {
-        patientID: parseInt(id), // URL'den alınan hasta ID'si
+        patientID: parseInt(id),
         visitDate: new Date(formData.visitDate).toISOString(),
         photoPath: formData.photoPath,
         labResultsFilePath: formData.labResultsFilePath,
         prescribedMedications: formData.prescribedMedications,
         notes: formData.notes,
       };
-    
+  
       console.log("Gönderilen Veri:", requestBody); // İstek verisini konsola yazdır
-    
+  
       const response = await fetch(`http://localhost:5005/api/visit/patient/${id}`, {
         method: "POST",
         headers: {
@@ -69,21 +70,21 @@ const AddVisit = () => {
         },
         body: JSON.stringify(requestBody),
       });
-    
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Ziyaret eklenemedi.");
       }
-    
+  
       const result = await response.json();
       console.log("API Yanıtı:", result); // API yanıtını konsola yazdır
-    
+  
       navigate(`/patient/${id}`);
     } catch (error) {
       console.error("Ziyaret ekleme hatası:", error.message);
     }
   };
-
+  
   const handleCancel = () => {
     navigate(`/view-patient/${id}`);
   };
@@ -160,40 +161,51 @@ const AddVisit = () => {
 
 const styles = {
   container: {
-    padding: "20px",
-    maxWidth: "600px",
-    margin: "0 auto",
+      padding: "20px",
+      maxWidth: "600px",
+      margin: "0 auto",
   },
   form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "15px",
+      display: "flex",
+      flexDirection: "column",
+      gap: "20px",
   },
   formGroup: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "5px",
+      display: "flex",
+      flexDirection: "column",
+      gap: "5px",
   },
   submitButton: {
-    padding: "10px",
-    backgroundColor: "#28a745",
-    color: "white",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
+      padding: "10px",
+      backgroundColor: "#28a745",
+      color: "white",
+      border: "none",
+      borderRadius: "5px",
+      cursor: "pointer",
   },
   cancelButton: {
-    padding: "10px",
-    backgroundColor: "#dc3545",
-    color: "white",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
+      padding: "10px",
+      backgroundColor: "#dc3545",
+      color: "white",
+      border: "none",
+      borderRadius: "5px",
+      cursor: "pointer",
   },
   buttonContainer: {
-    display: "flex",
-    justifyContent: "space-between",
+      display: "flex",
+      justifyContent: "space-between",
   },
+  textArea: { // textarea'lar için ortak stil
+      padding: '8px',
+      borderRadius: '5px',
+      border: '1px solid #ccc',
+      fontSize: '16px',
+      lineHeight: '1.5',
+      resize: 'vertical', // isteğe bağlı olarak sadece dikeyde büyütülebilir
+      minHeight: '100px', // minimum yükseklik
+  },
+  textAreaGroup: {
+      /* formGroup stillerini geçersiz kılmak veya eklemek için */
+  }
 };
-
 export default AddVisit;

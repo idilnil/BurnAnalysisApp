@@ -14,6 +14,8 @@ namespace BurnAnalysisApp.Data
         public DbSet<Visit> Visits { get; set; }
         public DbSet<ForumPost> ForumPosts { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<VoiceRecording> VoiceRecordings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -54,6 +56,13 @@ namespace BurnAnalysisApp.Data
                 .WithMany()
                 .HasForeignKey(fp => fp.PatientID)
                 .OnDelete(DeleteBehavior.Restrict); // Changed from Cascade to Restrict
+
+            // **NEW**: One-to-Many Relationship between ForumPost and Notification
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.ForumPost)
+                .WithMany(fp => fp.Notifications)
+                .HasForeignKey(n => n.ForumPostID)
+                .OnDelete(DeleteBehavior.SetNull); // Eğer bildirim silinirse forum postu silinmez
         }
     }
 }

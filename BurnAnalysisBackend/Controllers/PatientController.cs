@@ -2,6 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using BurnAnalysisApp.Data;
 using BurnAnalysisApp.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using BurnAnalysisApp.Services;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http; // IFormFile için gerekli
 
 namespace BurnAnalysisApp.Controllers
 {
@@ -10,13 +15,14 @@ namespace BurnAnalysisApp.Controllers
     public class PatientController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public PatientController(AppDbContext context)
+        public PatientController(AppDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
-        // GET: api/Patient/search?searchTerm=John
         [HttpGet("search")]
         public async Task<IActionResult> SearchPatients(string searchTerm)
         {
@@ -30,7 +36,6 @@ namespace BurnAnalysisApp.Controllers
             return Ok(patients);
         }
 
-        // GET: api/Patient/{id} - Tek bir hasta için bilgi al
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPatientById(int id)
         {
@@ -42,7 +47,6 @@ namespace BurnAnalysisApp.Controllers
             return Ok(patient);
         }
 
-        // GET: api/Patient - Tüm hastaları getir
         [HttpGet]
         public async Task<IActionResult> GetPatients()
         {
@@ -50,7 +54,6 @@ namespace BurnAnalysisApp.Controllers
             return Ok(patients);
         }
 
-        // POST: api/Patient - Yeni hasta ekle
         [HttpPost]
         public async Task<IActionResult> AddPatient([FromForm] PatientInfo patient, IFormFile photo)
         {
@@ -73,7 +76,6 @@ namespace BurnAnalysisApp.Controllers
             return CreatedAtAction(nameof(GetPatients), new { id = patient.PatientID }, patient);
         }
 
-        // PUT: api/Patient/{id} - Hasta bilgilerini güncelle
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePatient(int id, [FromBody] PatientInfo patient)
         {
@@ -101,7 +103,6 @@ namespace BurnAnalysisApp.Controllers
             return NoContent();
         }
 
-        // PUT: api/Patient/{id}/burndepth - Yanık derinliği güncelle
         [HttpPut("{id}/burndepth")]
         public async Task<IActionResult> UpdateBurnDepth(int id, [FromBody] string burnDepth)
         {
@@ -116,7 +117,6 @@ namespace BurnAnalysisApp.Controllers
             return NoContent();
         }
 
-        // DELETE: api/Patient/{id} - Hasta sil
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePatient(int id)
         {
@@ -135,5 +135,105 @@ namespace BurnAnalysisApp.Controllers
 
             return NoContent();
         }
+
+        [HttpPost("{id}/send-reminder")]
+        public async Task<IActionResult> SendAppointmentReminder(int id, [FromBody] DateTime appointmentDate)
+        {
+            var patient = await _context.Patients.FindAsync(id);
+
+            if (patient == null)
+                return NotFound("Hasta bulunamadı.");
+
+            if (string.IsNullOrEmpty(patient.Email))
+                return BadRequest("Hastanın e-posta adresi bulunamadı.");
+
+            var emailService = new EmailService(_configuration);
+            await emailService.SendAppointmentReminderEmailAsync(patient.Email, patient.Name, appointmentDate);
+
+            return Ok("Hatırlatma e-postası başarıyla gönderildi.");
+        }
+
+        [HttpPost("upload-audio/{patientId}")]
+        public async Task<IActionResult> UploadAudio(IFormFile audio, [FromRoute] int patientId)
+        {
+            if (audio == null || audio.Length == 0)
+            {
+                return BadRequest("Ses dosyası yüklenmedi.");
+            }
+
+            // Dosya adını ve yolunu oluştur
+            var fileName = $"{patientId}_{Guid.NewGuid()}.mp4"; // **.mp4 olarak değiştirildi**
+            string webRootPath = _configuration.GetValue<string>("WebRootPath");
+            if (string.IsNullOrEmpty(webRootPath))
+            {
+                webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            }
+
+            // Göreli yolu oluştur
+            var relativePath = Path.Combine("uploads", "Audio", fileName);
+
+            // Tam yolu oluştur
+            var filePath = Path.Combine(webRootPath, "uploads", "Audio", fileName);
+
+            // Dosyayı kaydet
+            try
+            {
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await audio.CopyToAsync(stream);
+                }
+
+                // Veritabanında hasta kaydını güncelle
+                var patient = await _context.Patients.FindAsync(patientId);
+                if (patient == null)
+                {
+                    if (System.IO.File.Exists(filePath)) { System.IO.File.Delete(filePath); }
+                    return NotFound("Hasta bulunamadı.");
+                }
+
+                // Eğer hastanın daha önce ses kaydı varsa, eski kaydı sil
+                if (!string.IsNullOrEmpty(patient.AudioPath) && System.IO.File.Exists(patient.AudioPath))
+                {
+                    System.IO.File.Delete(patient.AudioPath);
+                }
+
+                patient.AudioPath = relativePath; // Göreceli yolu kaydet
+                _context.Patients.Update(patient);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Ses kaydı başarıyla yüklendi.", filePath });
+            }
+            catch (Exception ex)
+            {
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+                return StatusCode(500, $"Ses kaydı yüklenirken bir hata oluştu: {ex.Message}");
+            }
+        }
+
+        [HttpDelete("delete-audio/{patientId}")]
+        public async Task<IActionResult> DeleteAudio(int patientId)
+        {
+            var patient = await _context.Patients.FindAsync(patientId);
+            if (patient == null)
+            {
+                return NotFound("Hasta bulunamadı.");
+            }
+
+            // Eğer hastanın ses kaydı varsa, dosyayı sil
+            if (!string.IsNullOrEmpty(patient.AudioPath) && System.IO.File.Exists(patient.AudioPath))
+            {
+                System.IO.File.Delete(patient.AudioPath);
+            }
+
+            patient.AudioPath = null; // Veritabanındaki yolu temizle
+            _context.Patients.Update(patient);
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // Başarılı silme
+        }
+
     }
 }
